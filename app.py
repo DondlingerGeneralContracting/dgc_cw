@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
-from llama_api_client import LlamaAPI
+from llamaapi import LlamaAPI
 import os
 
 app = Flask(__name__, static_folder='.')
