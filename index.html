@@ -19,6 +19,8 @@
                 <li><a href="#chat">Chat</a></li>
                 <li><a href="index2.html">🎮</a></li>
                 <li><a href="#" id="settings-link">⚙️</a></li>
+                <li><a href="https://github.com/DondlingerGeneralContracting/dgc_cw">dgc_cw Repo</a></li>
+                <li><a href="https://github.com/DondlingerGeneralContracting/dondlingergc">dondlingergc Repo</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
@@ -45,6 +47,10 @@
                     <button id="voice-btn" title="Voice Input">🎤</button>
                     <button id="send-btn">Send</button>
                     <button id="speak-btn" title="Toggle Text-to-Speech">🔊</button>
+                </div>
+                <div class="command-input">
+                    <input type="text" id="command-input" placeholder="Enter shell command...">
+                    <button id="command-btn">Execute</button>
                 </div>
             </div>
         </div>
@@ -175,6 +181,40 @@
             speakBtn.textContent = ttsEnabled ? '🔊' : '🔇';
         };
 
+        const commandInput = document.getElementById('command-input');
+        const commandBtn = document.getElementById('command-btn');
+
+        commandBtn.addEventListener('click', executeCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeCommand();
+        });
+
+        async function executeCommand() {
+            const cmd = commandInput.value.trim();
+            if (!cmd) return;
+            addMessage(`Executing: ${cmd}`, 'system');
+            commandInput.value = '';
+            try {
+                const response = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ command: cmd })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    addMessage(`Output: ${data.output || 'None'}`, 'system');
+                    if (data.error) addMessage(`Error: ${data.error}`, 'system');
+                } else {
+                    addMessage(`Error: ${data.error}`, 'system');
+                }
+            } catch (error) {
+                addMessage('Error executing command.', 'system');
+                console.error('Error:', error);
+            }
+        }
+
         voiceBtn.onclick = () => {
             if (isListening) {
                 recognition.stop();
@@ -223,12 +263,12 @@
                 },
                 body: JSON.stringify({ text: text, voice: 'expr-voice-2-f' })
             })
-            .then(response => response.blob())
-            .then(blob => {
-                const audio = new Audio(URL.createObjectURL(blob));
-                audio.play();
-            })
-            .catch(error => console.error('TTS error:', error));
+                .then(response => response.blob())
+                .then(blob => {
+                    const audio = new Audio(URL.createObjectURL(blob));
+                    audio.play();
+                })
+                .catch(error => console.error('TTS error:', error));
         }
 
         // Modify addMessage to save
