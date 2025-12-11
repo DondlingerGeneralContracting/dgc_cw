@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify, send_from_directory
-from llama_api_client import LlamaAPIClient as LlamaAPI
+from llamaapi import LlamaAPIClient as LlamaAPI
 import os
 
 app = Flask(__name__, static_folder='.')
 
 # Initialize LLAMA API client
-client = LlamaAPI()
+client = LlamaAPI(os.environ.get('LLAMA_API_KEY', 'your-api-key-here'))
 
 @app.route('/')
 def index():
@@ -24,16 +24,16 @@ def chat():
         if not message:
             return jsonify({'error': 'No message provided'}), 400
 
-        # Call LLAMA API
-        response = client.chat.completions.create(
-            model="meta-llama/Llama-3.3-8B-Instruct",
-            messages=[
+        response = client.run({
+            "model": "llama3-70b",
+            "messages": [
                 {"role": "system", "content": "You are a helpful assistant. Provide clear, accurate, and concise responses."},
                 {"role": "user", "content": message}
-            ],
-            max_tokens=512
-        )
-        response = response.choices[0].message.content
+            ]
+        })
+        if isinstance(response, list):
+            response = response[0]
+        response = response["choices"][0]["message"]["content"]
 
         return jsonify({'response': response})
     except Exception as e:

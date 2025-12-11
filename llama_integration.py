@@ -1,5 +1,5 @@
 import os
-from llama_api_client import LlamaAPIClient as LlamaAPI
+from llamaapi import LlamaAPI
 
 def run_llama(prompt):
     """
@@ -13,21 +13,22 @@ def run_llama(prompt):
     """
     try:
         # Initialize the LLaMA API client (reads API key from LLAMA_API_KEY env var)
-        llama = LlamaAPI()
+        api_key = os.environ["LLAMA_API_KEY"]
+        llama = LlamaAPI(api_key)
 
-        # Make the API call using OpenAI-compatible interface with best practices
-        response = llama.chat.completions.create(
-            model="meta-llama/Llama-3.3-8B-Instruct",
-            messages=[
+        # Make the API call
+        response = llama.run({
+            "model": "llama3-70b",
+            "messages": [
                 {"role": "system", "content": "You are a helpful assistant. Provide clear, accurate, and concise responses."},
                 {"role": "user", "content": prompt}
-            ],
-            max_tokens=512,
-            temperature=0.7
-        )
+            ]
+        })
 
         # Extract and return the response content
-        return response.choices[0].message.content
+        if isinstance(response, list):
+            response = response[0]
+        return response["choices"][0]["message"]["content"]
     except KeyError:
         return "Error: LLAMA_API_KEY environment variable not set"
     except Exception as e:
