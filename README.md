@@ -8,12 +8,19 @@ This website is deployed using GitHub Pages. The site is automatically deployed 
 
 ### Local Development
 
-To view the website locally, simply open `index.html` in your web browser. Note: Requires a WebGPU-compatible browser for model execution.
+To run the application locally:
+
+1. Install dependencies: `pip install -r requirements.txt`
+2. Set your LLAMA API key: `export LLAMA_API_KEY=your-key-here`
+3. Run the server: `python app.py`
+4. Open http://localhost:5000 in your browser
 
 ### Website Structure
 
 - `index.html` - Main website page with chat interface
 - `styles.css` - Styling and responsive design
+- `app.py` - Flask backend server with LLAMA API integration
+- `requirements.txt` - Python dependencies
 - `.github/workflows/pages.yml` - GitHub Pages deployment workflow
 
 ## Features
