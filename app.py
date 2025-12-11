@@ -1,11 +1,8 @@
 from flask import Flask, request, jsonify, send_from_directory
-from llamaapi import LlamaAPIClient as LlamaAPI
+import requests
 import os
 
 app = Flask(__name__, static_folder='.')
-
-# Initialize LLAMA API client
-client = LlamaAPI(os.environ.get('LLAMA_API_KEY', 'your-api-key-here'))
 
 @app.route('/')
 def index():
@@ -24,16 +21,27 @@ def chat():
         if not message:
             return jsonify({'error': 'No message provided'}), 400
 
-        response = client.run({
+        api_key = os.environ.get('LLAMA_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'LLAMA_API_KEY not set'}), 500
+
+        payload = {
             "model": "Llama-3.3-70B-Instruct",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant. Provide clear, accurate, and concise responses."},
                 {"role": "user", "content": message}
             ]
-        })
-        if isinstance(response, list):
-            response = response[0]
-        response = response["choices"][0]["message"]["content"]
+        }
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        api_response = requests.post("https://api.llama.com/v1/chat/completions", json=payload, headers=headers)
+        api_response.raise_for_status()
+        data = api_response.json()
+        response = data["completion_message"]["content"]
 
         return jsonify({'response': response})
     except Exception as e:

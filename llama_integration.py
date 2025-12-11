@@ -1,5 +1,5 @@
 import os
-from llamaapi import LlamaAPI
+import requests
 
 def run_llama(prompt):
     """
@@ -12,23 +12,25 @@ def run_llama(prompt):
         str: The model's response
     """
     try:
-        # Initialize the LLaMA API client (reads API key from LLAMA_API_KEY env var)
         api_key = os.environ["LLAMA_API_KEY"]
-        llama = LlamaAPI(api_key)
 
-        # Make the API call
-        response = llama.run({
+        payload = {
             "model": "Llama-3.3-70B-Instruct",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant. Provide clear, accurate, and concise responses."},
                 {"role": "user", "content": prompt}
             ]
-        })
+        }
 
-        # Extract and return the response content
-        if isinstance(response, list):
-            response = response[0]
-        return response["choices"][0]["message"]["content"]
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        api_response = requests.post("https://api.llama.com/v1/chat/completions", json=payload, headers=headers)
+        api_response.raise_for_status()
+        data = api_response.json()
+        return data["completion_message"]["content"]
     except KeyError:
         return "Error: LLAMA_API_KEY environment variable not set"
     except Exception as e:
