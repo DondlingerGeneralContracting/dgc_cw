@@ -68,9 +68,7 @@
                 <option value="Llama-4-Maverick-17B-128E-Instruct-FP8">Llama-4-Maverick-17B-128E-Instruct-FP8</option>
                 <option value="Llama-4-Scout-17B-16E-Instruct-FP8">Llama-4-Scout-17B-16E-Instruct-FP8</option>
             </select>
-            <label for="api-key">LLAMA API Key:</label>
-            <input type="password" id="api-key" placeholder="Enter your API key">
-            <p><small>API key is stored locally in your browser.</small></p>
+            <p><small>Note: API key is configured server-side in Netlify.</small></p>
         </div>
     </div>
 
@@ -127,25 +125,26 @@
                         { role: "system", content: "You are a helpful assistant. Provide clear, accurate, and concise responses." },
                         { role: "user", content: message }
                     ]
-            const response = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('llamaApiKey') || ''}`
-
-                    if(!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                };
+                const response = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                addMessage(data.choices[0].message.content, 'llama');
+                if (ttsEnabled) {
+                    speakText(data.choices[0].message.content);
+                }
+            } catch (error) {
+                addMessage('Error generating response. Please check your API key and try again.', 'system');
+                console.error('Error:', error);
             }
-
-            const data = await response.json();
-            addMessage(data.choices[0].message.content, 'llama');
-            if (ttsEnabled) {
-                speakText(data.choices[0].message.content);
-            }
-        } catch (error) {
-            addMessage('Error generating response. Please check your API key and try again.', 'system');
-            console.error('Error:', error);
-        }
         }
 
         sendBtn.addEventListener('click', sendMessage);
@@ -305,14 +304,6 @@
         // Save model on change
         modelSelect.onchange = function () {
             localStorage.setItem('llamaModel', modelSelect.value);
-        }
-
-        // API Key
-        const apiKeyInput = document.getElementById('api-key');
-        const savedApiKey = localStorage.getItem('llamaApiKey') || '';
-        apiKeyInput.value = savedApiKey;
-        apiKeyInput.onchange = function () {
-            localStorage.setItem('llamaApiKey', apiKeyInput.value);
         }
 
         loadHistory();
