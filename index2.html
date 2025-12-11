@@ -12,6 +12,7 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         .game-story {
             background: #1a1a1a;
             border: 2px solid #ff6b35;
@@ -23,11 +24,13 @@
             white-space: pre-wrap;
             color: #e0e0e0;
         }
+
         .game-input {
             display: flex;
             gap: 10px;
             margin: 20px 0;
         }
+
         .game-input input {
             flex: 1;
             padding: 10px;
@@ -37,6 +40,7 @@
             color: white;
             font-size: 16px;
         }
+
         .game-input button {
             padding: 10px 20px;
             background: #ff6b35;
@@ -46,13 +50,16 @@
             cursor: pointer;
             font-weight: bold;
         }
+
         .game-input button:hover {
             background: #e55a2b;
         }
+
         .start-game {
             text-align: center;
             margin: 40px 0;
         }
+
         .start-game button {
             padding: 15px 30px;
             background: #ff6b35;
@@ -64,10 +71,12 @@
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
         }
+
         .start-game button:hover {
             background: #e55a2b;
             transform: scale(1.05);
         }
+
         .stats {
             display: flex;
             justify-content: space-around;
@@ -76,10 +85,12 @@
             background: #2a2a2a;
             border-radius: 5px;
         }
+
         .stat {
             text-align: center;
             color: #ff6b35;
         }
+
         .stat span {
             font-weight: bold;
             color: white;
@@ -95,6 +106,7 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="index.html">🏠</a></li>
+                <li><a href="#" id="settings-link">⚙️</a></li>
             </ul>
         </div>
     </nav>
@@ -103,7 +115,8 @@
         <div class="container">
             <div class="hero-content">
                 <h2>The Ultimate AI Adventure</h2>
-                <p>Embark on an epic quest where your choices shape reality. Powered by LLAMA AI - every decision matters!</p>
+                <p>Embark on an epic quest where your choices shape reality. Powered by LLAMA AI - every decision
+                    matters!</p>
             </div>
         </div>
     </section>
@@ -116,11 +129,12 @@
         </div>
 
         <div id="game-story" class="game-story">
-Welcome to LLAMA Quest!
+            Welcome to LLAMA Quest!
 
-You find yourself standing at the edge of a mysterious forest. Ancient trees tower above you, their branches forming a canopy that blocks out the sun. A path winds into the darkness ahead.
+            You find yourself standing at the edge of a mysterious forest. Ancient trees tower above you, their branches
+            forming a canopy that blocks out the sun. A path winds into the darkness ahead.
 
-What do you do?
+            What do you do?
         </div>
 
         <div class="start-game">
@@ -128,8 +142,25 @@ What do you do?
         </div>
 
         <div class="game-input" id="input-section" style="display: none;">
-            <input type="text" id="action-input" placeholder="Enter your action (e.g., 'go north', 'examine tree', 'cast fireball')">
+            <input type="text" id="action-input"
+                placeholder="Enter your action (e.g., 'go north', 'examine tree', 'cast fireball')">
             <button id="action-btn">Execute</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Settings</h2>
+            <label for="model-select">LLAMA Model:</label>
+            <select id="model-select">
+                <option value="Llama-3.3-70B-Instruct">Llama-3.3-70B-Instruct</option>
+                <option value="Llama-3.3-8B-Instruct">Llama-3.3-8B-Instruct</option>
+                <option value="Llama-4-Maverick-17B-128E-Instruct-FP8">Llama-4-Maverick-17B-128E-Instruct-FP8</option>
+                <option value="Llama-4-Scout-17B-16E-Instruct-FP8">Llama-4-Scout-17B-16E-Instruct-FP8</option>
+            </select>
+            <p><small>Note: API key is configured server-side in Netlify.</small></p>
         </div>
     </div>
 
@@ -161,9 +192,9 @@ What do you do?
             conversationHistory.push({ role: 'user', content: message });
 
             const payload = {
-                model: "Llama-3.3-70B-Instruct",
+                model: localStorage.getItem('llamaModel') || "Llama-3.3-70B-Instruct",
                 messages: [
-                    { role: "system", content: "You are the game master for LLAMA Quest, an epic text-based adventure game. Respond in character as a dramatic narrator. Keep responses engaging and immersive. Include consequences for player actions. Update health, level, and score when appropriate. Format responses with vivid descriptions and choices when relevant." },
+                    { role: "system", content: "You are the game master for LLAMA Quest, an epic text-based adventure game. Respond in character as a dramatic narrator. Keep responses engaging and immersive. Include consequences for player actions. Update health, level, and score when appropriate. Format responses with vivid descriptions and choices when relevant. You can change the game's appearance by including commands like [CHANGE: background-color: red] or [CHANGE: font-family: 'Courier New'] in your responses." },
                     ...conversationHistory
                 ]
             };
@@ -182,8 +213,25 @@ What do you do?
                 }
 
                 const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
+                let aiResponse = data.choices[0].message.content;
                 conversationHistory.push({ role: 'assistant', content: aiResponse });
+
+                // Parse and apply sandbox changes
+                const changeRegex = /\[CHANGE:\s*([^:]+):\s*([^]]+)\]/g;
+                let match;
+                while ((match = changeRegex.exec(aiResponse)) !== null) {
+                    const property = match[1].trim();
+                    const value = match[2].trim();
+                    try {
+                        document.body.style[property] = value;
+                        console.log(`Applied change: ${property} = ${value}`);
+                    } catch (e) {
+                        console.log(`Failed to apply change: ${property} = ${value}`);
+                    }
+                }
+
+                // Remove change commands from displayed response
+                aiResponse = aiResponse.replace(changeRegex, '');
                 return aiResponse;
             } catch (error) {
                 return 'Error: The ancient magic falters. Try again, brave adventurer!';
@@ -222,6 +270,35 @@ What do you do?
         actionInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') executeAction();
         });
+
+        // Settings Modal
+        const settingsLink = document.getElementById('settings-link');
+        const modal = document.getElementById('settings-modal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const modelSelect = document.getElementById('model-select');
+
+        settingsLink.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Load saved model
+        const savedModel = localStorage.getItem('llamaModel') || 'Llama-3.3-70B-Instruct';
+        modelSelect.value = savedModel;
+
+        // Save model on change
+        modelSelect.onchange = function() {
+            localStorage.setItem('llamaModel', modelSelect.value);
+        }
 
         // Initialize
         updateStats(100, 1, 0);

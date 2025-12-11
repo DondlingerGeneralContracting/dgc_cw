@@ -18,6 +18,7 @@
                 <li><a href="#home">Home</a></li>
                 <li><a href="#chat">Chat</a></li>
                 <li><a href="index2.html">🎮</a></li>
+                <li><a href="#" id="settings-link">⚙️</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
@@ -46,6 +47,22 @@
             </div>
         </div>
     </section>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Settings</h2>
+            <label for="model-select">LLAMA Model:</label>
+            <select id="model-select">
+                <option value="Llama-3.3-70B-Instruct">Llama-3.3-70B-Instruct</option>
+                <option value="Llama-3.3-8B-Instruct">Llama-3.3-8B-Instruct</option>
+                <option value="Llama-4-Maverick-17B-128E-Instruct-FP8">Llama-4-Maverick-17B-128E-Instruct-FP8</option>
+                <option value="Llama-4-Scout-17B-16E-Instruct-FP8">Llama-4-Scout-17B-16E-Instruct-FP8</option>
+            </select>
+            <p><small>Note: API key is configured server-side in Netlify.</small></p>
+        </div>
+    </div>
 
     <section id="about" class="about">
         <div class="container">
@@ -95,8 +112,7 @@
 
             try {
                 const payload = {
-                    model: "Llama-3.3-70B-Instruct",
-                    messages: [
+                model: localStorage.getItem('llamaModel') || "Llama-3.3-70B-Instruct",
                         { role: "system", content: "You are a helpful assistant. Provide clear, accurate, and concise responses." },
                         { role: "user", content: message }
                     ]
@@ -126,6 +142,35 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+
+        // Settings Modal
+        const settingsLink = document.getElementById('settings-link');
+        const modal = document.getElementById('settings-modal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const modelSelect = document.getElementById('model-select');
+
+        settingsLink.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Load saved model
+        const savedModel = localStorage.getItem('llamaModel') || 'Llama-3.3-70B-Instruct';
+        modelSelect.value = savedModel;
+
+        // Save model on change
+        modelSelect.onchange = function() {
+            localStorage.setItem('llamaModel', modelSelect.value);
+        }
 
         addMessage('Welcome! Start chatting with LLAMA AI.', 'system');
     </script>
