@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 import requests
+import os
 
 app = Flask(__name__)
 
@@ -10,8 +11,11 @@ def index():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
+    api_key = os.getenv('LLAMA_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'LLAMA_API_KEY not set'}), 500
     headers = {
-        'Authorization': 'Bearer YOUR_API_KEY',  # Replace with your actual API key
+        'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json'
     }
     payload = {
@@ -25,4 +29,4 @@ def chat():
     return jsonify(response.json())
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

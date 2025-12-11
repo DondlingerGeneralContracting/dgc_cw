@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  llama-api-tor:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    tty: true
+    stdin_open: true
+    environment:
+      - LLAMA_API_KEY=${LLAMA_API_KEY}
+      - LLAMA_API_URL=${LLAMA_API_URL}
+    volumes:
+      - ../:/workspace

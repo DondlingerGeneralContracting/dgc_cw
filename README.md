@@ -1,21 +1,39 @@
-# LLAMA Chat Interface with TOR
+# LLAMA Chat Interface with TOR Hidden Service
 
-Interactive web interface for chatting with LLAMA AI models using the LLAMA API, routed through TOR for anonymity.
+Interactive web interface for chatting with LLAMA AI models, with API hosted on TOR hidden service for maximum privacy.
 
-## Local Setup with TOR
+## Docker Setup for TOR Hidden Service API
 
-1. Install Python dependencies: `pip install -r requirements.txt`
-2. Download and extract TOR expert bundle (included in `tor/` folder)
-3. Start TOR: `cd tor; .\tor.exe` (runs in background)
-4. Replace 'YOUR_API_KEY' in `app.py` with your actual LLAMA API key
-5. Run the app: `python app.py`
-6. Open http://localhost:5000 in your browser
+1. Set environment variables:
+   ```
+   export LLAMA_API_KEY="your_llama_api_key_here"
+   export LLAMA_API_URL="https://api.llama.com/v1/chat/completions"
+   ```
 
-The API calls to LLAMA are proxied through TOR for enhanced privacy.
+2. Build and run the Docker container:
+   ```
+   cd docker
+   docker-compose up --build
+   ```
 
-## GitHub Pages (Static Version)
+3. The container will output your .onion address, e.g., `http://abc123.onion`
 
-A static version is available on GitHub Pages at https://dondlingergeneralcontracting.github.io/dgc_cw/, but without TOR routing.
+4. Replace `YOUR_ONION_ADDRESS.onion` in `static/index.html` with your actual onion address
+
+5. Push the updated `static/index.html` to GitHub Pages
+
+## Accessing the Service
+
+- The API is hosted on TOR hidden service (.onion)
+- The frontend is static on GitHub Pages
+- Users must access the GitHub Pages site using TOR Browser to call the .onion API
+- All LLAMA API traffic is routed through TOR for anonymity
+
+## Security
+
+- Your own API with custom security (modify `src/app.py` for auth, rate limiting, etc.)
+- TOR hidden service provides anonymity
+- API key is environment variable, not exposed
 
 ### Website Structure
 
