@@ -22,8 +22,8 @@ def chat():
         'model': data.get('model', 'Llama-3.3-70B-Instruct'),
         'messages': data['messages']
     }
-    response = requests.post('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', 
-                             headers={'Content-Type': 'application/json'}, 
+    response = requests.post('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions',
+                             headers={'Content-Type': 'application/json'},
                              json=payload)
     return jsonify(response.json())
 
