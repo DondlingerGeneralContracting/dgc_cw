@@ -1,12 +1,18 @@
 from flask import Flask, request, jsonify, send_from_directory
 import requests
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.route('/')
 def index():
     return send_from_directory('static', 'index.html')
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok", "service": "llama-api-tor"})
 
 @app.route('/api/chat', methods=['POST'])
 def chat():

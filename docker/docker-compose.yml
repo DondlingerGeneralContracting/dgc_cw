@@ -5,6 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    platform: linux/arm64
     ports:
       - "5000:5000"
     tty: true
@@ -14,3 +15,4 @@ services:
       - LLAMA_API_URL=${LLAMA_API_URL}
     volumes:
       - ../:/workspace
+    restart: unless-stopped

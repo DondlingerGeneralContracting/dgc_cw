@@ -2,6 +2,54 @@
 
 Interactive web interface for chatting with LLAMA AI models, with API hosted on TOR hidden service for maximum privacy.
 
+## Docker Deployment on Raspberry Pi
+
+This container is designed to run on ARM64 (Raspberry Pi) and provides multiple API endpoints.
+
+### Endpoints
+
+- `GET /health` - Health check
+- `POST /api/chat` - LLAMA chat completion (safe, authenticated)
+- `GET /` - Static frontend
+
+### Setup on Raspberry Pi
+
+1. **Install Docker on Pi** (if not already):
+   ```bash
+   curl -fsSL https://get.docker.com -o get-docker.sh
+   sudo sh get-docker.sh
+   sudo usermod -aG docker jdd
+   ```
+
+2. **Clone the repo**:
+   ```bash
+   git clone https://github.com/DondlingerGeneralContracting/dgc_cw.git
+   cd dgc_cw
+   ```
+
+3. **Set environment variables**:
+   ```bash
+   export LLAMA_API_KEY="your_actual_key"
+   export LLAMA_API_URL="https://api.llama.com/v1/chat/completions"
+   ```
+
+4. **Run the container**:
+   ```bash
+   cd docker
+   docker-compose up -d --build
+   ```
+
+5. **Access on Tailnet**: The API will be available at your Pi's Tailscale IP on port 5000.
+
+### Adding More Endpoints
+
+Edit `src/app.py` to add new routes. Examples:
+- `/api/weather` - Weather data
+- `/api/translate` - Translation service
+- `/api/analyze` - Data analysis
+
+All endpoints are CORS-enabled and run through TOR for privacy.
+
 ## Docker Setup for TOR Hidden Service API
 
 1. Set environment variables:
