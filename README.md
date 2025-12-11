@@ -1,14 +1,21 @@
-# LLAMA Chat Interface
+# LLAMA Chat Interface with TOR
 
-Interactive web interface for chatting with LLAMA AI models using the LLAMA API client.
+Interactive web interface for chatting with LLAMA AI models using the LLAMA API, routed through TOR for anonymity.
 
-## GitHub Pages
+## Local Setup with TOR
 
-This website is deployed using GitHub Pages. The site is automatically deployed when changes are pushed to the `main` branch.
+1. Install Python dependencies: `pip install -r requirements.txt`
+2. Download and extract TOR expert bundle (included in `tor/` folder)
+3. Start TOR: `cd tor; .\tor.exe` (runs in background)
+4. Replace 'YOUR_API_KEY' in `app.py` with your actual LLAMA API key
+5. Run the app: `python app.py`
+6. Open http://localhost:5000 in your browser
 
-### Local Development
+The API calls to LLAMA are proxied through TOR for enhanced privacy.
 
-To view the website locally, simply open `index.html` in your web browser. Note: You need to replace 'YOUR_LLAMA_API_KEY_HERE' in the JavaScript with your actual LLAMA API key for the chat to work.
+## GitHub Pages (Static Version)
+
+A static version is available on GitHub Pages at https://dondlingergeneralcontracting.github.io/dgc_cw/, but without TOR routing.
 
 ### Website Structure
 
