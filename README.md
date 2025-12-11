@@ -1,6 +1,6 @@
 # LLAMA Chat Interface
 
-Interactive web interface for chatting with LLAMA AI models using WebLLM.
+Interactive web interface for chatting with LLAMA AI models using the LLAMA API client.
 
 ## GitHub Pages
 
@@ -18,8 +18,8 @@ To view the website locally, simply open `index.html` in your web browser. Note:
 
 ## Features
 
-- Interactive chat with LLAMA models in the browser
-- No data sent to external servers - fully client-side
+- Interactive chat with LLAMA models via API
+- Powered by LLAMA API client
 - Responsive design for mobile, tablet, and desktop
-- Real-time model loading progress
-- Streaming responses for better user experience
+- Real-time chat interface
+- Seamless API integration

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLAMA Chat Interface - DGC CW</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js"></script>
 </head>
 
 <body>
@@ -50,7 +49,8 @@
     <section id="about" class="about">
         <div class="container">
             <h2>About LLAMA</h2>
-            <p>LLAMA is an open-source large language model developed by Meta. This interface allows you to interact with LLAMA models directly in your browser using WebLLM, providing a private and efficient way to experience AI conversations without sending data to external servers.</p>
+            <p>LLAMA is an open-source large language model developed by Meta. This interface allows you to interact
+                with LLAMA models through our API, providing a seamless chat experience powered by the LLAMA API client.</p>
         </div>
     </section>
 
@@ -72,25 +72,9 @@
         </div>
     </footer>
     <script>
-        let engine = null;
         const chatHistory = document.getElementById('chat-history');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-
-        async function initEngine() {
-            try {
-                engine = await CreateMLCEngine("Llama-3-8B-Instruct-q4f32_1", {
-                    initProgressCallback: (progress) => {
-                        console.log(`Loading: ${progress.text}`);
-                        addMessage(`Loading model: ${progress.text}`, 'system');
-                    }
-                });
-                addMessage('LLAMA model loaded! You can now start chatting.', 'system');
-            } catch (error) {
-                addMessage('Failed to load LLAMA model. Please check your browser compatibility.', 'system');
-                console.error(error);
-            }
-        }
 
         function addMessage(text, type) {
             const messageDiv = document.createElement('div');
@@ -103,29 +87,28 @@
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
-            if (!engine) {
-                addMessage('Model is still loading. Please wait.', 'system');
-                return;
-            }
 
             addMessage(message, 'user');
             userInput.value = '';
 
             try {
-                const response = await engine.chat.completions.create({
-                    messages: [{ role: 'user', content: message }],
-                    stream: true
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
                 });
 
-                let fullResponse = '';
-                for await (const chunk of response) {
-                    const content = chunk.choices[0]?.delta?.content || '';
-                    fullResponse += content;
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                addMessage(fullResponse, 'llama');
+
+                const data = await response.json();
+                addMessage(data.response, 'llama');
             } catch (error) {
-                addMessage('Error generating response.', 'system');
-                console.error(error);
+                addMessage('Error generating response. Please try again.', 'system');
+                console.error('Error:', error);
             }
         }
 
@@ -134,7 +117,7 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        initEngine();
+        addMessage('Welcome! Start chatting with LLAMA AI.', 'system');
     </script>
 </body>
 
