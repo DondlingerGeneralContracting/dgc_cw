@@ -22,16 +22,11 @@ def chat():
         'model': data.get('model', 'Llama-3.3-70B-Instruct'),
         'messages': data['messages']
     }
-    response = requests.post('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions',
-                             headers={'Content-Type': 'application/json'},
-                             json=payload)
-    return jsonify(response.json())
-
-@app.route('/api/tts', methods=['POST'])
-def generate_tts():
-    data = request.get_json()
-    text = data.get('text', '')
-    voice = data.get('voice', 'expr-voice-2-f')
+    headers = {
+        'Authorization': 'Bearer YOUR_LLAMA_API_KEY',  # Replace with your actual key or use env var
+        'Content-Type': 'application/json'
+    }
+    response = requests.post('https://api.together.ai/v1/chat/completions', headers=headers, json=payload)
 
     if not text:
         return jsonify({'error': 'No text provided'}), 400
