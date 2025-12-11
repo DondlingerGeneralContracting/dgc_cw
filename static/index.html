@@ -101,7 +101,7 @@
                     ]
                 };
 
-                const response = await fetch('http://YOUR_ONION_ADDRESS.onion/api/chat', {
+                const response = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

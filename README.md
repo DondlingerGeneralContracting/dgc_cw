@@ -1,74 +1,51 @@
-# LLAMA Chat Interface with TOR Hidden Service
+# LLAMA Chat Interface with Netlify Proxy
 
-Interactive web interface for chatting with LLAMA AI models, with API hosted on TOR hidden service for maximum privacy.
+Interactive web interface for chatting with LLAMA AI models using Netlify Functions as a universal proxy.
 
-## Docker Deployment on Raspberry Pi
+## Netlify Setup
 
-This container is designed to run on ARM64 (Raspberry Pi) and provides multiple API endpoints.
+The API calls are proxied through your Netlify function at:
+`https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy`
 
-### Endpoints
+### Deploy Static Frontend
 
-- `GET /health` - Health check
-- `POST /api/chat` - LLAMA chat completion (safe, authenticated)
-- `GET /` - Static frontend
+1. The `static/index.html` is updated to call the Netlify proxy
+2. Push to GitHub and enable GitHub Pages
+3. Access at: https://dondlingergeneralcontracting.github.io/dgc_cw/
+
+### Netlify Function Details
+
+- Endpoint: `/.netlify/functions/llama-proxy`
+- Query param: `?path=/chat/completions`
+- Body: Standard LLAMA API request
+- Response: Proxied LLAMA response
+
+## Alternative: Docker on Raspberry Pi
+
+If you prefer local deployment, the Docker setup is still available for your Pi on Tailnet.
 
 ### Setup on Raspberry Pi
 
-1. **Install Docker on Pi** (if not already):
+1. **SSH to your Pi as user jdd**:
    ```bash
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sudo sh get-docker.sh
-   sudo usermod -aG docker jdd
+   ssh jdd@your-pi-tailscale-ip
    ```
 
-2. **Clone the repo**:
+2. **Clone and setup**:
    ```bash
    git clone https://github.com/DondlingerGeneralContracting/dgc_cw.git
    cd dgc_cw
-   ```
-
-3. **Set environment variables**:
-   ```bash
    export LLAMA_API_KEY="your_actual_key"
    export LLAMA_API_URL="https://api.llama.com/v1/chat/completions"
    ```
 
-4. **Run the container**:
+3. **Run the container**:
    ```bash
    cd docker
    docker-compose up -d --build
    ```
 
-5. **Access on Tailnet**: The API will be available at your Pi's Tailscale IP on port 5000.
-
-### Adding More Endpoints
-
-Edit `src/app.py` to add new routes. Examples:
-- `/api/weather` - Weather data
-- `/api/translate` - Translation service
-- `/api/analyze` - Data analysis
-
-All endpoints are CORS-enabled and run through TOR for privacy.
-
-## Docker Setup for TOR Hidden Service API
-
-1. Set environment variables:
-   ```
-   export LLAMA_API_KEY="your_llama_api_key_here"
-   export LLAMA_API_URL="https://api.llama.com/v1/chat/completions"
-   ```
-
-2. Build and run the Docker container:
-   ```
-   cd docker
-   docker-compose up --build
-   ```
-
-3. The container will output your .onion address, e.g., `http://abc123.onion`
-
-4. Replace `YOUR_ONION_ADDRESS.onion` in `static/index.html` with your actual onion address
-
-5. Push the updated `static/index.html` to GitHub Pages
+4. **Access**: API at `http://your-pi-tailscale-ip:5000/api/chat`
 
 ## Accessing the Service
 
