@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLAMA Quest - AI Adventure Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-story {
+            background: #1a1a1a;
+            border: 2px solid #ff6b35;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            color: #e0e0e0;
+        }
+        .game-input {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .game-input input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ff6b35;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: white;
+            font-size: 16px;
+        }
+        .game-input button {
+            padding: 10px 20px;
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .game-input button:hover {
+            background: #e55a2b;
+        }
+        .start-game {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .start-game button {
+            padding: 15px 30px;
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+        }
+        .start-game button:hover {
+            background: #e55a2b;
+            transform: scale(1.05);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+        .stat {
+            text-align: center;
+            color: #ff6b35;
+        }
+        .stat span {
+            font-weight: bold;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h1>LLAMA Quest</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">🏠</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>The Ultimate AI Adventure</h2>
+                <p>Embark on an epic quest where your choices shape reality. Powered by LLAMA AI - every decision matters!</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="game-container">
+        <div class="stats">
+            <div class="stat">Health: <span id="health">100</span></div>
+            <div class="stat">Level: <span id="level">1</span></div>
+            <div class="stat">Score: <span id="score">0</span></div>
+        </div>
+
+        <div id="game-story" class="game-story">
+Welcome to LLAMA Quest!
+
+You find yourself standing at the edge of a mysterious forest. Ancient trees tower above you, their branches forming a canopy that blocks out the sun. A path winds into the darkness ahead.
+
+What do you do?
+        </div>
+
+        <div class="start-game">
+            <button id="start-btn">Start Your Adventure!</button>
+        </div>
+
+        <div class="game-input" id="input-section" style="display: none;">
+            <input type="text" id="action-input" placeholder="Enter your action (e.g., 'go north', 'examine tree', 'cast fireball')">
+            <button id="action-btn">Execute</button>
+        </div>
+    </div>
+
+    <script>
+        const gameStory = document.getElementById('game-story');
+        const startBtn = document.getElementById('start-btn');
+        const inputSection = document.getElementById('input-section');
+        const actionInput = document.getElementById('action-input');
+        const actionBtn = document.getElementById('action-btn');
+        const healthEl = document.getElementById('health');
+        const levelEl = document.getElementById('level');
+        const scoreEl = document.getElementById('score');
+
+        let gameStarted = false;
+        let conversationHistory = [];
+
+        function updateStats(health, level, score) {
+            healthEl.textContent = health;
+            levelEl.textContent = level;
+            scoreEl.textContent = score;
+        }
+
+        function addToStory(text) {
+            gameStory.textContent += '\n\n' + text;
+            gameStory.scrollTop = gameStory.scrollHeight;
+        }
+
+        async function callLlama(message) {
+            conversationHistory.push({ role: 'user', content: message });
+
+            const payload = {
+                model: "Llama-3.3-70B-Instruct",
+                messages: [
+                    { role: "system", content: "You are the game master for LLAMA Quest, an epic text-based adventure game. Respond in character as a dramatic narrator. Keep responses engaging and immersive. Include consequences for player actions. Update health, level, and score when appropriate. Format responses with vivid descriptions and choices when relevant." },
+                    ...conversationHistory
+                ]
+            };
+
+            try {
+                const response = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                conversationHistory.push({ role: 'assistant', content: aiResponse });
+                return aiResponse;
+            } catch (error) {
+                return 'Error: The ancient magic falters. Try again, brave adventurer!';
+            }
+        }
+
+        startBtn.addEventListener('click', async () => {
+            startBtn.style.display = 'none';
+            inputSection.style.display = 'flex';
+            gameStarted = true;
+
+            const initialResponse = await callLlama("The player has started the game. Begin the adventure from the forest edge.");
+            addToStory(initialResponse);
+        });
+
+        async function executeAction() {
+            const action = actionInput.value.trim();
+            if (!action) return;
+
+            addToStory(`\n> ${action}`);
+            actionInput.value = '';
+
+            const response = await callLlama(`Player action: ${action}`);
+            addToStory(response);
+
+            // Simple stat updates (in a real game, parse AI response)
+            const currentScore = parseInt(scoreEl.textContent) + 10;
+            updateStats(
+                Math.max(0, parseInt(healthEl.textContent) - Math.floor(Math.random() * 10)),
+                parseInt(levelEl.textContent) + (currentScore % 100 === 0 ? 1 : 0),
+                currentScore
+            );
+        }
+
+        actionBtn.addEventListener('click', executeAction);
+        actionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeAction();
+        });
+
+        // Initialize
+        updateStats(100, 1, 0);
+    </script>
+</body>
+
+</html>
