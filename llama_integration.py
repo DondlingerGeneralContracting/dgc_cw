@@ -18,7 +18,7 @@ def run_llama(prompt):
 
         # Make the API call
         response = llama.run({
-            "model": "llama3-70b",
+            "model": "Llama-3.3-70B-Instruct",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant. Provide clear, accurate, and concise responses."},
                 {"role": "user", "content": prompt}
