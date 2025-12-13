@@ -271,15 +271,15 @@
                             <a href="${result.href}" class="result-title" target="_blank">${result.title}</a>
                             <div class="result-url">${result.href}</div>
                             <div class="result-snippet">${result.body}</div>
-                        </div>
-                    `;
+                        </div >
+            `;
         });
 
         resultsHTML += `
-                    <div class="ai-insight">
+            < div class="ai-insight" >
                         <h3>🤖 AI Insight</h3>
                         <p>${aiInsight}</p>
-                    </div>
+                    </div >
                 `;
 
         resultsContainer.innerHTML = resultsHTML;
