@@ -248,30 +248,6 @@
                 });
                 const ddgsResults = await ddgsResponse.json();
 
-                // Fetch AI insight
-                const aiResponse = await fetch(`${backendUrl}/llama-proxy`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'Llama-3.3-70B-Instruct',
-                        messages: [
-                            { role: 'system', content: 'You are an AI search assistant. Provide a concise, insightful summary of the search query in 2-3 sentences. Focus on key facts, context, and implications.' },
-                            { role: 'user', content: query }
-                        ]
-                    })
-                });
-                const aiData = await aiResponse.json();
-                const aiInsight = aiData.choices[0].message.content;
-                        model: 'Llama-3.3-70B-Instruct',
-                        messages: [
-                            { role: 'system', content: 'You are an AI search assistant. Provide a concise, insightful summary of the search query in 2-3 sentences. Focus on key facts, context, and implications.' },
-                            { role: 'user', content: query }
-                        ]
-                    })
-                });
-                const aiData = await aiResponse.json();
-                const aiInsight = aiData.choices[0].message.content;
-
                 // Display results
                 let resultsHTML = '';
 
@@ -285,19 +261,33 @@
                     `;
                 });
 
-                resultsHTML += `
-                    <div class="ai-insight">
-                        <h3>🤖 AI Insight</h3>
-                        <p>${aiInsight}</p>
-                    </div>
-                `;
-
                 resultsContainer.innerHTML = resultsHTML;
 
             } catch (error) {
                 resultsContainer.innerHTML = '<div class="error">Search failed. Please try again.</div>';
                 console.error('Search error:', error);
             }
+        }
+                            <a href="${result.href}" class="result-title" target="_blank">${result.title}</a>
+                            <div class="result-url">${result.href}</div>
+                            <div class="result-snippet">${result.body}</div>
+                        </div>
+                    `;
+        });
+
+        resultsHTML += `
+                    <div class="ai-insight">
+                        <h3>🤖 AI Insight</h3>
+                        <p>${aiInsight}</p>
+                    </div>
+                `;
+
+        resultsContainer.innerHTML = resultsHTML;
+
+            } catch (error) {
+            resultsContainer.innerHTML = '<div class="error">Search failed. Please try again.</div>';
+            console.error('Search error:', error);
+        }
         }
 
         function handleSearch() {
