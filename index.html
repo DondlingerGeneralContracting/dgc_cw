@@ -240,8 +240,8 @@
 
             try {
                 // Fetch DDGS results
-                const ddgsResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
-                const ddgsData = await ddgsResponse.json();
+                const ddgsResponse = await fetch(`/.netlify/functions/ddgs-search?q=${encodeURIComponent(query)}`);
+                const ddgsResults = await ddgsResponse.json();
 
                 // Fetch AI insight
                 const aiResponse = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
@@ -261,38 +261,15 @@
                 // Display results
                 let resultsHTML = '';
 
-                if (ddgsData.AbstractText) {
+                ddgsResults.slice(0, 5).forEach(result => {
                     resultsHTML += `
                         <div class="result-item">
-                            <a href="${ddgsData.AbstractURL || '#'}" class="result-title" target="_blank">${ddgsData.Heading || 'Instant Answer'}</a>
-                            <div class="result-url">${ddgsData.AbstractURL || ''}</div>
-                            <div class="result-snippet">${ddgsData.AbstractText}</div>
+                            <a href="${result.href}" class="result-title" target="_blank">${result.title}</a>
+                            <div class="result-url">${result.href}</div>
+                            <div class="result-snippet">${result.body}</div>
                         </div>
                     `;
-                }
-
-                if (ddgsData.RelatedTopics && ddgsData.RelatedTopics.length > 0) {
-                    ddgsData.RelatedTopics.slice(0, 5).forEach(topic => {
-                        if (topic.Text && topic.FirstURL) {
-                            resultsHTML += `
-                                <div class="result-item">
-                                    <a href="${topic.FirstURL}" class="result-title" target="_blank">${topic.Text.split(' - ')[0]}</a>
-                                    <div class="result-url">${topic.FirstURL}</div>
-                                    <div class="result-snippet">${topic.Text}</div>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-
-                if (ddgsData.Answer) {
-                    resultsHTML += `
-                        <div class="result-item">
-                            <div class="result-title">Direct Answer</div>
-                            <div class="result-snippet">${ddgsData.Answer}</div>
-                        </div>
-                    `;
-                }
+                });
 
                 resultsHTML += `
                     <div class="ai-insight">
