@@ -3,307 +3,410 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantumSearch - AI-Powered Search Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#8B0000">
+    <link rel="manifest" href="manifest.json">
+    <title>🍒 Cherri Generator</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+            background: #0a0505;
             color: #e0e0e0;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            padding: 20px;
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            padding: 16px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(139, 0, 0, 0.6);
         }
 
         .logo {
-            font-size: 2.5em;
+            font-size: 1.8em;
             font-weight: 700;
-            background: linear-gradient(45deg, #00d4ff, #090979);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
+            color: white;
         }
 
         .tagline {
-            font-size: 1.1em;
-            opacity: 0.8;
+            font-size: 0.75em;
+            opacity: 0.9;
+            color: #ffe0e0;
+            margin-top: 4px;
         }
 
-        .search-container {
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 0 20px;
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 12px;
+            max-width: 100%;
         }
 
-        .search-box {
-            position: relative;
-            width: 100%;
+        .panel {
+            background: rgba(20, 10, 10, 0.95);
+            border: 1px solid #DC143C;
+            border-radius: 16px;
+            padding: 16px;
         }
 
-        #search-input {
-            width: 100%;
-            padding: 15px 60px 15px 20px;
-            font-size: 18px;
-            border: 2px solid #333;
-            border-radius: 50px;
-            background: #1a1a1a;
-            color: #e0e0e0;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        #search-input:focus {
-            border-color: #00d4ff;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-
-        #search-button {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(45deg, #00d4ff, #090979);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .panel h2 {
+            color: #FF6B6B;
+            font-size: 1em;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
         }
 
-        #search-button:hover {
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        .prompt-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid #4a2020;
+            border-radius: 12px;
+            background: #1a0a0a;
+            color: #e0e0e0;
+            resize: none;
+            font-family: inherit;
+            -webkit-appearance: none;
         }
 
-        #search-button svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
+        .prompt-input:focus {
+            outline: none;
+            border-color: #DC143C;
         }
 
-        .results-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
         }
 
-        .result-item {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s ease forwards;
-        }
-
-        .result-item:hover {
-            border-color: #00d4ff;
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
-        }
-
-        .result-title {
-            font-size: 1.2em;
+        .btn {
+            flex: 1;
+            padding: 14px 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: #00d4ff;
-            margin-bottom: 5px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            min-height: 48px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #DC143C 0%, #FF6B6B 100%);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(220, 20, 60, 0.15);
+            border: 1px solid #DC143C;
+            color: #FF6B6B;
+        }
+
+        .btn-small {
+            flex: 0;
+            padding: 10px 14px;
+            font-size: 13px;
+            min-height: auto;
+        }
+
+        .examples {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .example-chip {
+            padding: 8px 14px;
+            background: rgba(220, 20, 60, 0.2);
+            border: 1px solid #DC143C;
+            border-radius: 20px;
+            color: #FF6B6B;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .example-chip:active {
+            background: rgba(220, 20, 60, 0.4);
+        }
+
+        .code-output {
+            width: 100%;
+            min-height: 200px;
+            padding: 14px;
+            font-size: 13px;
+            border: 2px solid #2a3a2a;
+            border-radius: 12px;
+            background: #050a05;
+            color: #90EE90;
+            resize: none;
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            line-height: 1.5;
+            -webkit-appearance: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .status.loading {
+            color: #FF6B6B;
+        }
+
+        .status.error {
+            color: #ff4444;
+        }
+
+        .status.success {
+            color: #90EE90;
+        }
+
+        .explanation {
+            margin-top: 12px;
+            padding: 14px;
+            background: rgba(34, 139, 34, 0.1);
+            border: 1px solid #228B22;
+            border-radius: 12px;
+            color: #90EE90;
+            font-size: 13px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .explanation.visible {
+            display: block;
+        }
+
+        .syntax-bar {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #666;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .syntax-bar code {
+            color: #90EE90;
+            background: rgba(144, 238, 144, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .footer a {
+            color: #DC143C;
             text-decoration: none;
         }
 
-        .result-title:hover {
-            text-decoration: underline;
-        }
-
-        .result-url {
-            color: #888;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .result-snippet {
-            color: #ccc;
-            line-height: 1.6;
-        }
-
-        .ai-insight {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border: 1px solid #00d4ff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);
-        }
-
-        .ai-insight h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        .ai-insight p {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-            font-size: 1.1em;
-        }
-
-        .error {
-            text-align: center;
-            padding: 40px;
-            color: #ff6b6b;
-            font-size: 1.1em;
-        }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
             }
-        }
 
-        .result-item:nth-child(1) {
-            animation-delay: 0.1s;
-        }
+            .panel {
+                flex: 1;
+            }
 
-        .result-item:nth-child(2) {
-            animation-delay: 0.2s;
-        }
+            .prompt-input {
+                min-height: 150px;
+            }
 
-        .result-item:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-
-        .result-item:nth-child(4) {
-            animation-delay: 0.4s;
-        }
-
-        .result-item:nth-child(5) {
-            animation-delay: 0.5s;
+            .code-output {
+                min-height: 300px;
+            }
         }
     </style>
 </head>
 
 <body>
     <header class="header">
-        <div class="logo">QuantumSearch</div>
-        <div class="tagline">The Future of Search - Powered by AI & Privacy-First Results</div>
+        <div class="logo">🍒 Cherri Generator</div>
+        <div class="tagline">AI-Powered Siri Shortcuts • Llama 3.3</div>
     </header>
 
-    <div class="search-container">
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="Ask anything... get AI-enhanced answers">
-            <button id="search-button">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                </svg>
-            </button>
+    <div class="app-container">
+        <div class="panel">
+            <h2>📝 Describe Your Shortcut</h2>
+            <textarea id="prompt" class="prompt-input" placeholder="What shortcut do you want to create?"></textarea>
+            <div class="btn-row">
+                <button id="generate" class="btn btn-primary">🍒 Generate</button>
+                <button id="clear" class="btn btn-secondary btn-small">Clear</button>
+            </div>
+            <div class="examples">
+                <span class="example-chip" data-p="A hello world shortcut with an alert">Hello World</span>
+                <span class="example-chip" data-p="Ask for name, show personalized greeting">User Input</span>
+                <span class="example-chip" data-p="Repeat a message 5 times">Loop</span>
+                <span class="example-chip" data-p="Check if online, show status">Network</span>
+                <span class="example-chip" data-p="Menu with Morning/Afternoon/Evening options">Menu</span>
+                <span class="example-chip" data-p="Calculate tip: 15%, 18%, 20% options">Tip Calc</span>
+            </div>
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="panel">
+            <h2>🖥️ Cherri Code</h2>
+            <textarea id="code" class="code-output" placeholder="// Generated code appears here" readonly></textarea>
+            <div class="btn-row">
+                <button id="copy" class="btn btn-secondary">📋 Copy</button>
+                <button id="explain" class="btn btn-secondary">💡 Explain</button>
+            </div>
+            <div id="explanation" class="explanation"></div>
+            <div class="syntax-bar">
+                <code>@var = "val"</code>
+                <code>show("text")</code>
+                <code>alert("msg")</code>
+                <code>"{var}"</code>
+                <code>#include 'actions/scripting'</code>
+            </div>
         </div>
     </div>
 
-    <div class="results-container" id="results-container">
-        <!-- Results will be inserted here -->
-    </div>
+    <footer class="footer">
+        <a href="https://cherrilang.org" target="_blank">Docs</a> •
+        <a href="https://playground.cherrilang.org" target="_blank">Playground</a> •
+        Powered by Llama API
+    </footer>
 
     <script>
-        const backendUrl = 'http://100.115.115.21:5001'; // Your deployed backend URL
-        const searchInput = document.getElementById('search-input');
-        const searchButton = document.getElementById('search-button');
-        const resultsContainer = document.getElementById('results-container');
+        const API_BASE = 'http://100.115.115.21:5001';
+        const $ = id => document.getElementById(id);
 
-        async function performSearch(query) {
-            resultsContainer.innerHTML = '<div class="loading">Searching the quantum realm...</div>';
+        // Example chips
+        document.querySelectorAll('.example-chip').forEach(c => {
+            c.onclick = () => { $('prompt').value = c.dataset.p; $('prompt').focus(); };
+        });
+
+        // Generate
+        $('generate').onclick = async () => {
+            const prompt = $('prompt').value.trim();
+            if (!prompt) { $('status').textContent = 'Enter a description'; $('status').className = 'status error'; return; }
+
+            $('status').textContent = '🍒 Generating...';
+            $('status').className = 'status loading';
+            $('generate').disabled = true;
+            $('explanation').classList.remove('visible');
 
             try {
-                // Fetch DDGS results
-                const ddgsResponse = await fetch(`${backendUrl}/ddgs-search`, {
+                const res = await fetch(`${API_BASE}/api/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
+                    body: JSON.stringify({ prompt })
                 });
-                const ddgsResults = await ddgsResponse.json();
+                const data = await res.json();
+                if (data.success && data.code) {
+                    $('code').value = data.code;
+                    $('status').textContent = '✅ Done!';
+                    $('status').className = 'status success';
+                } else {
+                    $('status').textContent = '❌ ' + (data.error || 'Failed');
+                    $('status').className = 'status error';
+                }
+            } catch (e) {
+                $('status').textContent = '❌ ' + e.message;
+                $('status').className = 'status error';
+            }
+            $('generate').disabled = false;
+        };
 
-                // Generate AI insights using the backend's LLAMA API
-                const aiResponse = await fetch(`${backendUrl}/api/chat`, {
+        // Clear
+        $('clear').onclick = () => {
+            $('prompt').value = '';
+            $('code').value = '';
+            $('explanation').classList.remove('visible');
+            $('status').textContent = '';
+        };
+
+        // Copy
+        $('copy').onclick = async () => {
+            const code = $('code').value;
+            if (!code) { $('status').textContent = 'No code'; $('status').className = 'status error'; return; }
+            try {
+                await navigator.clipboard.writeText(code);
+                $('status').textContent = '📋 Copied!';
+                $('status').className = 'status success';
+            } catch (e) {
+                $('status').textContent = 'Copy failed';
+                $('status').className = 'status error';
+            }
+        };
+
+        // Explain
+        $('explain').onclick = async () => {
+            const code = $('code').value;
+            if (!code) { $('status').textContent = 'Generate first'; $('status').className = 'status error'; return; }
+
+            $('status').textContent = '💡 Analyzing...';
+            $('status').className = 'status loading';
+            $('explain').disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/explain`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        messages: [{
-                            role: "user",
-                            content: `Analyze these search results for the query "${query}" and provide a concise AI-powered insight or summary that adds value beyond the raw results. Focus on key themes, trends, or helpful context. Keep it under 150 words.\n\nSearch Results:\n${ddgsResults.slice(0, 5).map((r, i) => `${i + 1}. ${r.title}: ${r.body.substring(0, 200)}...`).join('\n')}`
-                        }]
-                    })
+                    body: JSON.stringify({ code })
                 });
-                const aiData = await aiResponse.json();
-                const aiInsight = aiData.choices?.[0]?.message?.content || "AI analysis unavailable at this time.";
-
-                // Display results with AI insights
-                let resultsHTML = '';
-
-                ddgsResults.slice(0, 5).forEach(result => {
-                    resultsHTML += `
-                        <div class="result-item">
-                            <a href="${result.href}" class="result-title" target="_blank">${result.title}</a>
-                            <div class="result-url">${result.href}</div>
-                            <div class="result-snippet">${result.body}</div>
-                        </div>
-                    `;
-                });
-
-                // Add AI insight section
-                resultsHTML += `
-                    <div class="ai-insight">
-                        <h3>🤖 AI Insight</h3>
-                        <p>${aiInsight}</p>
-                    </div>
-                `;
-
-                resultsContainer.innerHTML = resultsHTML;
-
-            } catch (error) {
-                resultsContainer.innerHTML = '<div class="error">Search failed. Please try again.</div>';
-                console.error('Search error:', error);
+                const data = await res.json();
+                if (data.success && data.explanation) {
+                    $('explanation').innerHTML = data.explanation.replace(/\n/g, '<br>');
+                    $('explanation').classList.add('visible');
+                    $('status').textContent = '';
+                } else {
+                    $('status').textContent = '❌ ' + (data.error || 'Failed');
+                    $('status').className = 'status error';
+                }
+            } catch (e) {
+                $('status').textContent = '❌ ' + e.message;
+                $('status').className = 'status error';
             }
-        }
+            $('explain').disabled = false;
+        };
 
-        function handleSearch() {
-            const query = searchInput.value.trim();
-            if (query) {
-                performSearch(query);
-            }
-        }
-
-        searchButton.addEventListener('click', handleSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSearch();
-            }
-        });
+        // Ctrl+Enter to generate
+        $('prompt').onkeydown = e => { if (e.key === 'Enter' && e.ctrlKey) $('generate').click(); };
     </script>
 </body>
 
