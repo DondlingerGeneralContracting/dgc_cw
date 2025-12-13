@@ -231,6 +231,7 @@
     </div>
 
     <script>
+        const backendUrl = 'https://your-pi-tailscale-funnel-url'; // Replace with your Tailscale funnel URL
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
         const resultsContainer = document.getElementById('results-container');
@@ -240,14 +241,27 @@
 
             try {
                 // Fetch DDGS results
-                const ddgsResponse = await fetch(`/.netlify/functions/ddgs-search?q=${encodeURIComponent(query)}`);
+                const ddgsResponse = await fetch(`${backendUrl}/ddgs-search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
                 const ddgsResults = await ddgsResponse.json();
 
                 // Fetch AI insight
-                const aiResponse = await fetch('https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy?path=/chat/completions', {
+                const aiResponse = await fetch(`${backendUrl}/llama-proxy`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        model: 'Llama-3.3-70B-Instruct',
+                        messages: [
+                            { role: 'system', content: 'You are an AI search assistant. Provide a concise, insightful summary of the search query in 2-3 sentences. Focus on key facts, context, and implications.' },
+                            { role: 'user', content: query }
+                        ]
+                    })
+                });
+                const aiData = await aiResponse.json();
+                const aiInsight = aiData.choices[0].message.content;
                         model: 'Llama-3.3-70B-Instruct',
                         messages: [
                             { role: 'system', content: 'You are an AI search assistant. Provide a concise, insightful summary of the search query in 2-3 sentences. Focus on key facts, context, and implications.' },
