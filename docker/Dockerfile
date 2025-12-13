@@ -8,9 +8,13 @@ COPY scripts/ /app/scripts
 COPY config/ /app/config
 COPY static/ /app/static
 
+RUN chmod +x /app/scripts/entrypoint.sh
+
 RUN pip install --no-cache-dir -r /app/config/requirements.txt
 
 RUN mkdir -p /var/lib/tor/hidden_service
+
+RUN chmod 700 /var/lib/tor/hidden_service
 
 ENV LLAMA_API_KEY=""
 ENV LLAMA_API_URL="https://api.llama.com/v1/chat/completions"

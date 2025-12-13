@@ -231,7 +231,7 @@
     </div>
 
     <script>
-        const backendUrl = 'https://your-pi-tailscale-funnel-url'; // Replace with your Tailscale funnel URL
+        const backendUrl = 'http://100.115.115.21:5001'; // Your deployed backend URL
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
         const resultsContainer = document.getElementById('results-container');
@@ -248,7 +248,21 @@
                 });
                 const ddgsResults = await ddgsResponse.json();
 
-                // Display results
+                // Generate AI insights using the backend's LLAMA API
+                const aiResponse = await fetch(`${backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: "user",
+                            content: `Analyze these search results for the query "${query}" and provide a concise AI-powered insight or summary that adds value beyond the raw results. Focus on key themes, trends, or helpful context. Keep it under 150 words.\n\nSearch Results:\n${ddgsResults.slice(0, 5).map((r, i) => `${i + 1}. ${r.title}: ${r.body.substring(0, 200)}...`).join('\n')}`
+                        }]
+                    })
+                });
+                const aiData = await aiResponse.json();
+                const aiInsight = aiData.choices?.[0]?.message?.content || "AI analysis unavailable at this time.";
+
+                // Display results with AI insights
                 let resultsHTML = '';
 
                 ddgsResults.slice(0, 5).forEach(result => {
@@ -261,33 +275,20 @@
                     `;
                 });
 
+                // Add AI insight section
+                resultsHTML += `
+                    <div class="ai-insight">
+                        <h3>🤖 AI Insight</h3>
+                        <p>${aiInsight}</p>
+                    </div>
+                `;
+
                 resultsContainer.innerHTML = resultsHTML;
 
             } catch (error) {
                 resultsContainer.innerHTML = '<div class="error">Search failed. Please try again.</div>';
                 console.error('Search error:', error);
             }
-        }
-                            <a href="${result.href}" class="result-title" target="_blank">${result.title}</a>
-                            <div class="result-url">${result.href}</div>
-                            <div class="result-snippet">${result.body}</div>
-                        </div >
-            `;
-        });
-
-        resultsHTML += `
-            < div class="ai-insight" >
-                        <h3>🤖 AI Insight</h3>
-                        <p>${aiInsight}</p>
-                    </div >
-                `;
-
-        resultsContainer.innerHTML = resultsHTML;
-
-            } catch (error) {
-            resultsContainer.innerHTML = '<div class="error">Search failed. Please try again.</div>';
-            console.error('Search error:', error);
-        }
         }
 
         function handleSearch() {

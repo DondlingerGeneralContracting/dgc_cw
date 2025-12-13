@@ -2,9 +2,16 @@ from flask import Flask, request, jsonify, send_from_directory
 import requests
 import os
 from flask_cors import CORS
+from ddgs import DDGS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, origins=["*"])  # Allow all origins for now
+
+# Tor proxies
+proxies = {
+    'http': 'socks5h://127.0.0.1:9050',
+    'https': 'socks5h://127.0.0.1:9050'
+}
 
 @app.route('/')
 def index():
@@ -13,6 +20,21 @@ def index():
 @app.route('/health')
 def health():
     return jsonify({"status": "ok", "service": "llama-api-tor"})
+
+@app.route('/ddgs-search', methods=['POST'])
+def ddgs_search():
+    data = request.get_json()
+    query = data.get('query', '')
+    if not query:
+        return jsonify({'error': 'No query provided'}), 400
+
+    try:
+        # Use DDGS with Tor proxy
+        with DDGS(proxies=proxies) as ddgs:
+            results = list(ddgs.text(query, max_results=10))
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():

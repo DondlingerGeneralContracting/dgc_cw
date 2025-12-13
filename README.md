@@ -24,28 +24,7 @@ The API calls are proxied through your Netlify function at:
 
 If you prefer local deployment, the Docker setup is still available for your Pi on Tailnet.
 
-### Automated Deployment
-
-1. **SSH to your Pi as user jdd**:
-   ```bash
-   ssh jdd@your-pi-tailscale-ip
-   ```
-
-2. **Run the deployment script**:
-   ```bash
-   wget https://raw.githubusercontent.com/DondlingerGeneralContracting/dgc_cw/master/deploy_pi.sh
-   chmod +x deploy_pi.sh
-   ./deploy_pi.sh
-   ```
-
-   The script will:
-   - Check system requirements
-   - Install Docker and Docker Compose if needed
-   - Clone/update the repository
-   - Set environment variables
-   - Build and start the container
-
-### Manual Setup on Raspberry Pi
+### Setup on Raspberry Pi
 
 1. **SSH to your Pi as user jdd**:
    ```bash
