@@ -27,3 +27,19 @@ def handler(event, context):
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
+
+# Simulate Netlify event
+event = {
+    'queryStringParameters': {
+        'q': 'python programming'
+    }
+}
+
+context = {}
+
+# Call the handler
+response = handler(event, context)
+
+print("Status Code:", response['statusCode'])
+print("Response Body:")
+print(json.dumps(json.loads(response['body']), indent=2))
