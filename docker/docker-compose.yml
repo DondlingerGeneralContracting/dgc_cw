@@ -12,24 +12,7 @@ services:
     volumes:
       - ../:/workspace
     restart: unless-stopped
-    networks:
-      - cherri-net
-
-  tor-proxy:
-    image: goldy/tor-hidden-service:latest
-    environment:
-      - SERVICE_CHERRI=80:cherri-api:5000
-    volumes:
-      - tor-keys:/var/lib/tor/hidden_service
-    depends_on:
-      - cherri-api
-    restart: unless-stopped
-    networks:
-      - cherri-net
 
 networks:
-  cherri-net:
+  default:
     driver: bridge
-
-volumes:
-  tor-keys:
