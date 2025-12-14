@@ -1,18 +1,35 @@
 version: '3.8'
 
 services:
-  llama-api-tor:
+  cherri-api:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    platform: linux/arm64
     ports:
       - "5001:5000"
-    tty: true
-    stdin_open: true
-    environment:
-      - LLAMA_API_KEY=${LLAMA_API_KEY}
-      - LLAMA_API_URL=${LLAMA_API_URL}
+    env_file:
+      - ../.chameleon.environment
     volumes:
       - ../:/workspace
     restart: unless-stopped
+    networks:
+      - cherri-net
+
+  tor-proxy:
+    image: goldy/tor-hidden-service:latest
+    environment:
+      - SERVICE_CHERRI=80:cherri-api:5000
+    volumes:
+      - tor-keys:/var/lib/tor/hidden_service
+    depends_on:
+      - cherri-api
+    restart: unless-stopped
+    networks:
+      - cherri-net
+
+networks:
+  cherri-net:
+    driver: bridge
+
+volumes:
+  tor-keys:

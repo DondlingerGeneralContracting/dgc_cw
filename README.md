@@ -1,51 +1,70 @@
-# LLAMA Chat Interface with Netlify Proxy
+# 🍒 Cherri Generator
 
-Interactive web interface for chatting with LLAMA AI models using Netlify Functions as a universal proxy.
+AI-powered Siri Shortcuts code generator using the official Llama API (`api.llama.com`).
 
-## Netlify Setup
+## What is Cherri?
 
-The API calls are proxied through your Netlify function at:
-`https://llama-universal-netlify-project.netlify.app/.netlify/functions/llama-proxy`
+[Cherri](https://cherrilang.org) compiles to Siri Shortcuts. Describe what you want, get working code.
 
-### Deploy Static Frontend
+## Stack
 
-1. The `static/index.html` is updated to call the Netlify proxy
-2. Push to GitHub and enable GitHub Pages
-3. Access at: https://dondlingergeneralcontracting.github.io/dgc_cw/
+- **Frontend**: Mobile-first PWA (add to home screen)
+- **Backend**: Flask on Raspberry Pi
+- **AI**: Llama-4-Scout-17B-16E-Instruct-FP8 via `api.llama.com`
+- **Network**: Tailscale + Tor hidden service
 
-### Netlify Function Details
+## Deploy to Raspberry Pi
 
-- Endpoint: `/.netlify/functions/llama-proxy`
-- Query param: `?path=/chat/completions`
-- Body: Standard LLAMA API request
-- Response: Proxied LLAMA response
+```bash
+# SSH to Pi via Tailscale
+ssh jdd@100.x.x.x
 
-## Alternative: Docker on Raspberry Pi
+# Clone
+git clone https://github.com/DondlingerGeneralContracting/dgc_cw.git
+cd dgc_cw
 
-If you prefer local deployment, the Docker setup is still available for your Pi on Tailnet.
+# Ensure .chameleon.environment is present (contains API keys)
+# Run with Docker
+cd docker
+docker-compose up -d --build
+```
 
-### Setup on Raspberry Pi
+## Access
 
-1. **SSH to your Pi as user jdd**:
-   ```bash
-   ssh jdd@your-pi-tailscale-ip
-   ```
+| Method       | URL                                              |
+| ------------ | ------------------------------------------------ |
+| Tailscale    | `http://100.x.x.x:5000`                          |
+| Tor          | Check `docker logs tor-proxy` for .onion address |
+| GitHub Pages | Static frontend only (needs backend)             |
 
-2. **Clone and setup**:
-   ```bash
-   git clone https://github.com/DondlingerGeneralContracting/dgc_cw.git
-   cd dgc_cw
-   export LLAMA_API_KEY="your_actual_key"
-   export LLAMA_API_URL="https://api.llama.com/v1/chat/completions"
-   ```
+## Get Your .onion Address
 
-3. **Run the container**:
-   ```bash
-   cd docker
-   docker-compose up -d --build
-   ```
+```bash
+docker exec -it dgc_cw-tor-proxy-1 cat /var/lib/tor/hidden_service/hostname
+```
 
-4. **Access**: API at `http://your-pi-tailscale-ip:5000/api/chat`
+## API Endpoints
+
+```
+POST /api/generate  { "prompt": "..." } → { "code": "...", "success": true }
+POST /api/explain   { "code": "..." }   → { "explanation": "...", "success": true }
+```
+
+## Local Dev
+
+```bash
+export LLAMA_API_KEY="your_key"
+pip install -r requirements.txt
+python app.py
+```
+
+Open `http://localhost:5000`
+
+## Resources
+
+- [Cherri Docs](https://cherrilang.org/language/)
+- [Cherri Playground](https://playground.cherrilang.org/)
+- [Llama API](https://llama.com)
 
 ## Accessing the Service
 

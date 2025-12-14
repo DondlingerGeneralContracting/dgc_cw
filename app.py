@@ -1,8 +1,71 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import requests
 import os
 
 app = Flask(__name__)
+CORS(app)
+
+# Llama API per llama-chat-completions.yaml spec
+LLAMA_API_URL = os.environ.get("LLAMA_API_URL", "https://api.llama.com/v1/chat/completions")
+LLAMA_MODEL = os.environ.get("LLAMA_MODEL", "Llama-3.3-70B-Instruct")
+
+CHERRI_SYSTEM_PROMPT = """You are a Cherri code generator. Cherri is a Siri Shortcuts programming language that compiles to valid runnable Shortcuts.
+
+CHERRI SYNTAX RULES:
+- Variables: @varname = "value" or @varname = 123
+- Constants: const name = value (for magic variable outputs)
+- Type declarations: @varname: text, @varname: number
+- String interpolation: "{variable}"
+- Functions: function name(type arg) { ... output("result") }
+- Includes: #include 'actions/scripting' (for standard actions)
+- Defines: #define glyph iconName, #define color colorName
+- Actions: show("text"), alert("message", "title"), output("value")
+- Conditionals: if condition { } else { }
+- Loops: repeat 5 { }, repeatEach item in list { }
+- Comments: // single line, /* multi-line */
+- Raw actions: rawAction("identifier", { "key": "value" })
+- VCards: makeVCard("Title", "Subtitle")
+
+AVAILABLE GLYPHS: smileyFace, heart, star, bell, bookmark, calendar, camera, clock, cloud, gear, house, location, mail, music, phone, search, share, trash, user, etc.
+
+AVAILABLE COLORS: red, orange, yellow, green, blue, purple, pink, gray, teal, navy, etc.
+
+COMMON INCLUDES:
+- #include 'actions/scripting' (for scripting actions)
+- #include 'actions/network' (for network actions like isOnline())
+- #include 'actions/documents' (for file operations)
+
+OUTPUT RULES:
+1. Output ONLY valid Cherri code
+2. Always start with #define glyph and #define color
+3. Include necessary #include statements
+4. Use proper variable syntax with @
+5. Add helpful comments
+6. Make the code functional and complete
+
+Generate clean, working Cherri code based on the user's request."""
+
+def call_llama(messages, temperature=0.6, max_tokens=2048):
+    """Call Llama API per llama-chat-completions.yaml spec"""
+    payload = {
+        'model': LLAMA_MODEL,
+        'messages': messages,
+        'temperature': temperature,
+        'max_completion_tokens': max_tokens,
+        'top_p': 0.9
+    }
+    headers = {
+        'Authorization': f'Bearer {os.environ.get("LLAMA_API_KEY", "")}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.post(LLAMA_API_URL, headers=headers, json=payload)
+    if response.status_code == 200:
+        result = response.json()
+        # Per yaml spec: completion_message.content
+        return result.get('completion_message', {}).get('content', '')
+    else:
+        raise Exception(f"Llama API error {response.status_code}: {response.text}")
 
 @app.route('/')
 def index():
@@ -12,47 +75,45 @@ def index():
 def static_files(path):
     return send_from_directory('.', path)
 
-@app.route('/api/brainstorm', methods=['POST'])
-def brainstorm():
+@app.route('/api/generate', methods=['POST'])
+def generate_cherri():
     data = request.json
-    user_input = data.get('input', '')
+    user_input = data.get('prompt', '')
     if not user_input:
-        return jsonify({'error': 'No input provided'}), 400
+        return jsonify({'error': 'No prompt provided'}), 400
 
-    system_prompt = """You are a deterministic problem-collapsing engine.
-
-Rules:
-- Do not ask questions.
-- If information is missing, assume and lock it.
-- Produce ONE usable artifact.
-- Output must follow this exact structure:
-
-1. Problem Restated
-2. Assumptions Locked
-3. Constraints
-4. Decomposition
-5. First Usable Artifact
-
-If you violate this, you failed."""
-
-    payload = {
-        'model': 'Llama-3.3-70B-Instruct',
-        'messages': [
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_input}
+    try:
+        messages = [
+            {'role': 'system', 'content': CHERRI_SYSTEM_PROMPT},
+            {'role': 'user', 'content': f"Generate Cherri code for: {user_input}"}
         ]
-    }
-    headers = {
-        'Authorization': f'Bearer {os.environ.get("LLAMA_API_KEY", "")}',
-        'Content-Type': 'application/json'
-    }
-    response = requests.post('https://api.together.ai/v1/chat/completions', headers=headers, json=payload)
-    if response.status_code == 200:
-        result = response.json()
-        output = result['choices'][0]['message']['content']
-        return jsonify({'output': output})
-    else:
-        return jsonify({'error': 'API request failed', 'status_code': response.status_code}), response.status_code
+        code = call_llama(messages, temperature=0.6)
+        # Clean up code blocks if present
+        if '```cherri' in code:
+            code = code.split('```cherri')[1].split('```')[0].strip()
+        elif '```' in code:
+            code = code.split('```')[1].split('```')[0].strip()
+        return jsonify({'code': code, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/explain', methods=['POST'])
+def explain_cherri():
+    data = request.json
+    code = data.get('code', '')
+    if not code:
+        return jsonify({'error': 'No code provided'}), 400
+
+    try:
+        messages = [
+            {'role': 'system', 'content': 'You are a helpful Cherri code explainer. Explain Cherri code clearly and concisely.'},
+            {'role': 'user', 'content': f"Explain this Cherri code line by line:\n\n```cherri\n{code}\n```"}
+        ]
+        explanation = call_llama(messages, temperature=0.5, max_tokens=1024)
+        return jsonify({'explanation': explanation, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Bind to 0.0.0.0 for Tailscale/Tor access
+    app.run(host='0.0.0.0', port=5000, debug=False)

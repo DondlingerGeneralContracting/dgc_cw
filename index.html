@@ -119,7 +119,12 @@
             color: white;
         }
 
-        .btn-primary:active {
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:active,
+        .btn-secondary:active {
             transform: scale(0.98);
         }
 
@@ -227,16 +232,65 @@
             margin: 0 4px;
         }
 
-        .footer {
-            text-align: center;
-            padding: 16px;
-            font-size: 11px;
-            color: #555;
+        .chat-panel {
+            display: none;
+            margin-top: 12px;
         }
 
-        .footer a {
-            color: #DC143C;
-            text-decoration: none;
+        .chat-panel.visible {
+            display: block;
+        }
+
+        .chat-messages {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1a0a0a;
+            border: 1px solid #4a2020;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .message.user {
+            background: rgba(220, 20, 60, 0.2);
+            text-align: right;
+        }
+
+        .message.ai {
+            background: rgba(34, 139, 34, 0.2);
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #4a2020;
+            border-radius: 8px;
+            background: #1a0a0a;
+            color: #e0e0e0;
+        }
+
+        .voice-btn {
+            padding: 10px;
+            background: #DC143C;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .voice-btn.recording {
+            background: #FF6B6B;
         }
 
         @media (min-width: 768px) {
@@ -274,7 +328,16 @@
             <textarea id="prompt" class="prompt-input" placeholder="What shortcut do you want to create?"></textarea>
             <div class="btn-row">
                 <button id="generate" class="btn btn-primary">🍒 Generate</button>
+                <button id="chat-toggle" class="btn btn-secondary btn-small">💬 Chat First</button>
                 <button id="clear" class="btn btn-secondary btn-small">Clear</button>
+            </div>
+            <div id="chat-panel" class="chat-panel">
+                <div id="chat-messages" class="chat-messages"></div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask about your shortcut...">
+                    <button id="voice-btn" class="voice-btn">🎤</button>
+                    <button id="send-chat" class="btn btn-primary btn-small">Send</button>
+                </div>
             </div>
             <div class="examples">
                 <span class="example-chip" data-p="A hello world shortcut with an alert">Hello World</span>
@@ -312,8 +375,101 @@
     </footer>
 
     <script>
-        const API_BASE = 'http://mw5agrbtqnuck5ewcdbkbuggnhpiypfajblvp3vy2t466hjnfvncttad.onion';
+        // Detect environment - use relative path when served from Pi, absolute when elsewhere
+        const API_BASE = window.location.hostname.includes('100.115.119.60') || window.location.hostname.includes('.onion')
+            ? ''
+            : 'http://100.115.119.60:5001';
         const $ = id => document.getElementById(id);
+
+        let chatMessages = [];
+        let recognition = null;
+
+        // Toggle chat panel
+        $('chat-toggle').onclick = () => {
+            const panel = $('chat-panel');
+            panel.classList.toggle('visible');
+            $('chat-toggle').textContent = panel.classList.contains('visible') ? 'Hide Chat' : '💬 Chat First';
+        };
+
+        // Voice recognition - disabled on iOS due to HTTPS requirement
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            if (!isIOS) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    $('chat-input').value = transcript;
+                    $('voice-btn').classList.remove('recording');
+                };
+
+                recognition.onerror = () => {
+                    $('voice-btn').classList.remove('recording');
+                    $('status').textContent = 'Voice recognition failed';
+                    $('status').className = 'status error';
+                };
+
+                $('voice-btn').onclick = () => {
+                    if (recognition) {
+                        recognition.start();
+                        $('voice-btn').classList.add('recording');
+                    }
+                };
+            } else {
+                $('voice-btn').style.display = 'none';
+                $('voice-btn').nextElementSibling.textContent = 'Voice disabled on iOS (requires HTTPS)';
+            }
+        } else {
+            $('voice-btn').style.display = 'none';
+        }
+
+        // Send chat message
+        const sendChat = async () => {
+            const input = $('chat-input').value.trim();
+            if (!input) return;
+
+            chatMessages.push({ role: 'user', content: input });
+            addMessage('user', input);
+            $('chat-input').value = '';
+
+            $('status').textContent = '💬 Thinking...';
+            $('status').className = 'status loading';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatMessages })
+                });
+                const data = await res.json();
+                if (data.success && data.response) {
+                    chatMessages.push({ role: 'assistant', content: data.response });
+                    addMessage('ai', data.response);
+                    $('status').textContent = '';
+                } else {
+                    $('status').textContent = '❌ ' + (data.error || 'Chat failed');
+                    $('status').className = 'status error';
+                }
+            } catch (e) {
+                $('status').textContent = '❌ ' + e.message;
+                $('status').className = 'status error';
+            }
+        };
+
+        $('send-chat').onclick = sendChat;
+        $('chat-input').onkeydown = e => { if (e.key === 'Enter') sendChat(); };
+
+        const addMessage = (type, text) => {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            $('chat-messages').appendChild(msg);
+            $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
+        };
 
         // Example chips
         document.querySelectorAll('.example-chip').forEach(c => {
@@ -322,8 +478,18 @@
 
         // Generate
         $('generate').onclick = async () => {
-            const prompt = $('prompt').value.trim();
-            if (!prompt) { $('status').textContent = 'Enter a description'; $('status').className = 'status error'; return; }
+            let prompt = $('prompt').value.trim();
+            if (!prompt && chatMessages.length === 0) {
+                $('status').textContent = 'Enter a description or chat first';
+                $('status').className = 'status error';
+                return;
+            }
+
+            // If chat has messages, use the last user message or combine
+            if (chatMessages.length > 0) {
+                const lastUserMsg = chatMessages.filter(m => m.role === 'user').pop();
+                if (lastUserMsg) prompt = lastUserMsg.content;
+            }
 
             $('status').textContent = '🍒 Generating...';
             $('status').className = 'status loading';
@@ -356,6 +522,8 @@
         $('clear').onclick = () => {
             $('prompt').value = '';
             $('code').value = '';
+            $('chat-messages').innerHTML = '';
+            chatMessages = [];
             $('explanation').classList.remove('visible');
             $('status').textContent = '';
         };
@@ -405,8 +573,16 @@
             $('explain').disabled = false;
         };
 
-        // Ctrl+Enter to generate
-        $('prompt').onkeydown = e => { if (e.key === 'Enter' && e.ctrlKey) $('generate').click(); };
+        const vibrate = () => {
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        };
+
+        // Add vibration to buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', vibrate);
+        });
     </script>
 </body>
 

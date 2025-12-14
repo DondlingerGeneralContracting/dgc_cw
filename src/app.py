@@ -1,10 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 CORS(app)
+
+@app.route('/')
+def index():
+    return send_from_directory('/app', 'index.html')
+
+@app.route('/<path:path>')
+def static_files(path):
+    return send_from_directory('/app', path)
 
 # Llama API per llama-chat-completions.yaml spec
 LLAMA_API_URL = os.environ.get("LLAMA_API_URL", "https://api.llama.com/v1/chat/completions")
@@ -106,47 +114,24 @@ def explain_cherri():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-@app.route('/health')
-def health():
-    return jsonify({"status": "ok", "service": "llama-api-tor"})
-
-@app.route('/ddgs-search', methods=['POST'])
-def ddgs_search():
-    data = request.get_json()
-    query = data.get('query', '')
-    if not query:
-        return jsonify({'error': 'No query provided'}), 400
-
-    try:
-        # Use DDGS with Tor proxy
-        with DDGS(proxies=proxies) as ddgs:
-            results = list(ddgs.text(query, max_results=10))
-        return jsonify(results)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
-    api_key = os.getenv('LLAMA_API_KEY')
-    if not api_key:
-        return jsonify({'error': 'LLAMA_API_KEY not set'}), 500
-    headers = {
-        'Authorization': f'Bearer {api_key}',
-        'Content-Type': 'application/json'
-    }
-    payload = {
-        'model': 'Llama-3.3-70B-Instruct',
-        'messages': data['messages']
-    }
-    proxies = {
-        'https': 'socks5h://127.0.0.1:9050'
-    }
-    response = requests.post('https://api.llama.com/v1/chat/completions', headers=headers, json=payload, proxies=proxies)
-    return jsonify(response.json())
+    messages = data.get('messages', [])
+    if not messages:
+        return jsonify({'error': 'No messages provided'}), 400
+
+    try:
+        # Add system prompt for chat refinement
+        system_message = {
+            'role': 'system',
+            'content': 'You are a helpful assistant for creating Siri Shortcuts using Cherri language. Help the user refine their shortcut idea through conversation. When they are ready, suggest they say "generate" to create the code.'
+        }
+        full_messages = [system_message] + messages
+        response = call_llama(full_messages, temperature=0.7, max_tokens=1024)
+        return jsonify({'response': response, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
