@@ -44,13 +44,7 @@ COMMON INCLUDES:
 - #include 'actions/network' (for network actions like isOnline())
 - #include 'actions/documents' (for file operations)
 
-OUTPUT RULES:
-1. Output ONLY valid Cherri code
-2. Always start with #define glyph and #define color
-3. Include necessary #include statements
-4. Use proper variable syntax with @
-5. Add helpful comments
-6. Make the code functional and complete
+Generate clean, working Cherri code based on the user's request."""
 
 Generate clean, working Cherri code based on the user's request."""
 
@@ -87,13 +81,18 @@ def generate_cherri():
             {'role': 'system', 'content': CHERRI_SYSTEM_PROMPT},
             {'role': 'user', 'content': f"Generate Cherri code for: {user_input}"}
         ]
-        code = call_llama(messages, temperature=0.6)
-        # Clean up code blocks if present
-        if '```cherri' in code:
-            code = code.split('```cherri')[1].split('```')[0].strip()
-        elif '```' in code:
-            code = code.split('```')[1].split('```')[0].strip()
-        return jsonify({'code': code, 'success': True})
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "type": "object",
+                "properties": {
+                    "code": {"type": "string"}
+                },
+                "required": ["code"]
+            }
+        }
+        result = call_llama(messages, temperature=0.6, max_tokens=2048, response_format=response_format)
+        return jsonify({'code': result['code'], 'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

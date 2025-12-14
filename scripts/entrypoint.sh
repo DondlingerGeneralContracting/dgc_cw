@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Create Tor hidden service directory
+mkdir -p /var/lib/tor/hidden_service
+
 # Start TOR
 tor -f /app/config/torrc &
 
