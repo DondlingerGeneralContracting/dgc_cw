@@ -497,7 +497,7 @@
             $('explanation').classList.remove('visible');
 
             try {
-                const res = await fetch(`${API_BASE}/api/generate`, {
+                const res = await fetch(`${API_BASE}/.netlify/functions/llama-generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt })
