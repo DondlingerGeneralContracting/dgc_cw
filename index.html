@@ -376,9 +376,7 @@
 
     <script>
         // Detect environment - use relative path when served from Pi, absolute when elsewhere
-        const API_BASE = window.location.hostname.includes('100.115.119.60') || window.location.hostname.includes('.onion')
-            ? ''
-            : 'http://100.115.119.60:5001';
+        const API_BASE = window.location.hostname.includes('netlify') ? window.location.origin : 'http://localhost:5000'
         const $ = id => document.getElementById(id);
 
         let chatMessages = [];
